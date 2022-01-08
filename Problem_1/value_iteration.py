@@ -12,7 +12,7 @@ def value_iteration(problem, reward, terminal_mask, gam):
     sdim, adim = Ts[0].shape[-1], len(Ts)  # state and action dimension
     V = tf.zeros([sdim])
 
-    assert terminal_mask.ndim == 1 and reward.ndim == 2
+    assert terminal_mask.ndim == 1 and reward.ndim == 1
 
     # perform value iteration
     for _ in range(1000):
@@ -21,13 +21,21 @@ def value_iteration(problem, reward, terminal_mask, gam):
         # V has shape [sdim]; sdim = n * n is the total number of grid state
         # Ts is a 4 element python list of transition matrices for 4 actions
 
-        # reward has shape [sdim, adim] - represents the reward for each state
-        # action pair
+        # reward has shape [sdim] - represents the reward for each state
 
         # terminal_mask has shape [sdim] and has entries 1 for terminal states
 
+        Vs = []
+        for i in range(adim):
+            Vs.append(terminal_mask * reward +
+                      (1.0 - terminal_mask) * gam * tf.linalg.matvec(Ts[i], V))
+        V_new = tf.reduce_max(Vs, axis=0)
+
         # compute the next value function estimate for the iteration
         # compute err = tf.linalg.norm(V_new - V_prev) as a breaking condition
+
+        err = tf.linalg.norm(V_new - V)
+        V = V_new
 
         ######### Your code ends here ###########
 
@@ -42,7 +50,7 @@ def main():
     # generate the problem
     problem = generate_problem()
     n = problem["n"]
-    sdim, adim = n * n, 1
+    sdim = n * n
 
     # create the terminal mask vector
     terminal_mask = np.zeros([sdim])
@@ -50,8 +58,8 @@ def main():
     terminal_mask = tf.convert_to_tensor(terminal_mask, dtype=tf.float32)
 
     # generate the reward vector
-    reward = np.zeros([sdim, adim])
-    reward[problem["pos2idx"][19, 9], :] = 1.0
+    reward = np.zeros([sdim])
+    reward[problem["pos2idx"][19, 9]] = 1.0
     reward = tf.convert_to_tensor(reward, dtype=tf.float32)
 
     gam = 0.95
