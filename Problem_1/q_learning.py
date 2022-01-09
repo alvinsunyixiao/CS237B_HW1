@@ -31,7 +31,7 @@ def Q_learning(Q_network, reward_fn, is_terminal_fn, X, U, Xp, gam):
         ######### Your code starts here #########
         # compute the loss
 
-        # given the current (Q) and the optimal next state Q function (Q_next), 
+        # given the current (Q) and the optimal next state Q function (Q_next),
         # compute the Q-learning loss
 
         # make sure to account for the reward, the terminal state and the
@@ -96,6 +96,9 @@ def main():
             # remember that transition matrices have a shape [sdim, sdim]
             # remember that tf.random.categorical takes in the log of
             # probabilities, not the probabilities themselves
+
+            log_prob = tf.math.log(Ts[u][x])
+            xp = tf.random.categorical(log_prob[tf.newaxis], 1)
 
             ######### Your code ends here ###########
 
