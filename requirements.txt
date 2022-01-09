@@ -1,5 +1,6 @@
 numpy
 tqdm
+tensorflow
 matplotlib
 h5py
 Pillow
