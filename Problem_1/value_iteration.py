@@ -46,39 +46,38 @@ def value_iteration(problem, reward, terminal_mask, gam):
 
     return V
 
-def simulate_trajectory(problem, V, goal_idx):
+def simulate_trajectory(problem, V, R, gam, goal_idx):
     print("Start trajectory simulation")
     Ts = problem["Ts"]
     pos2idx = problem["pos2idx"]
     idx2pos = problem["idx2pos"]
     n = problem["n"]
     sdim = n ** 2
-    pt = np.array([0, 0]) # initial state
-    pt_min, pt_max = [0, 0], [n - 1, n - 1]
+    adim = len(Ts)
+    S = pos2idx[0, 0] # initial state
 
-    Xs = [pt[0]]
-    Ys = [pt[1]]
+    Xs = [0]
+    Ys = [0]
     # simulate up to 100 steps
-    for i in trange(100):
+    for _ in trange(100):
         # compute optimal action
-        pt_right = np.clip(pt + np.array([1, 0]), pt_min, pt_max)
-        pt_up = np.clip(pt + np.array([0, 1]), pt_min, pt_max)
-        pt_left = np.clip(pt + np.array([-1, 0]), pt_min, pt_max)
-        pt_down = np.clip(pt + np.array([0, -1]), pt_min, pt_max)
-        next_pts = [pt_right, pt_up, pt_left, pt_down]
-        Vs = [V[next_pt[0], next_pt[1]] for next_pt in next_pts]
-        action = np.argmax(Vs)
+        Qs = []
+        for a in range(adim):
+            Qs.append(R[S, a] + gam * tf.reduce_sum(V * Ts[a][S]))
+        action = tf.argmax(Qs, axis=0)
 
         # sample from state transition distribution
-        S = pos2idx[pt[0], pt[1]]
         S_new_sample = np.random.choice(np.arange(sdim),
                                         p=Ts[action][S].numpy())
+
         pt = idx2pos[S_new_sample]
         Xs.append(pt[0])
         Ys.append(pt[1])
 
         if S_new_sample == goal_idx:
             break
+
+        S = S_new_sample
 
     plt.plot(Xs, Ys, "r")
 
@@ -102,11 +101,10 @@ def main():
 
     gam = 0.95
     V_opt = value_iteration(problem, reward, terminal_mask, gam)
-    V_opt = np.array(V_opt).reshape((n, n))
 
     plt.figure(213)
-    visualize_value_function(V_opt)
-    simulate_trajectory(problem, V_opt, goal_idx)
+    visualize_value_function(V_opt.numpy().reshape((n, n)))
+    simulate_trajectory(problem, V_opt, reward, gam, goal_idx)
     plt.title("value iteration")
     plt.show()
 
