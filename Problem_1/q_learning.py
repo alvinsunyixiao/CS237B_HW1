@@ -2,10 +2,10 @@ import os, sys, pdb, math, pickle, time
 
 import matplotlib
 import tensorflow as tf, numpy as np, matplotlib.pyplot as plt
+import tensorflow.keras as tfk
 from tqdm import tqdm
 
 from utils import map_chunked, generate_problem, visualize_value_function
-
 
 def Q_learning(Q_network, reward_fn, is_terminal_fn, X, U, Xp, gam):
     assert X.ndim == 2 and U.ndim == 2 and Xp.ndim == 2
@@ -37,6 +37,14 @@ def Q_learning(Q_network, reward_fn, is_terminal_fn, X, U, Xp, gam):
         # make sure to account for the reward, the terminal state and the
         # discount factor gam
 
+        lhs = Q
+
+        R = reward_fn(X_, U_)
+        is_terminal = is_terminal_fn(X_)
+        rhs = tf.where(is_terminal, x=R, y=R + gam * next_Q)
+
+        l = tf.reduce_mean(tf.square(lhs - rhs))
+
         ######### Your code ends here ###########
 
         # need to regularize the Q-value, because we're training its difference
@@ -47,6 +55,7 @@ def Q_learning(Q_network, reward_fn, is_terminal_fn, X, U, Xp, gam):
     # create the Adam optimizer with tensorflow keras
     # experiment with different learning rates [1e-4, 1e-3, 1e-2, 1e-1]
 
+    optimizer = tfk.optimizers.Adam(1e-1)
 
     ######### Your code ends here ###########
 
@@ -56,6 +65,7 @@ def Q_learning(Q_network, reward_fn, is_terminal_fn, X, U, Xp, gam):
         # apply a single step of gradient descent to the Q_network variables
         # take a look at the tf.keras.optimizers
 
+        optimizer.minimize(loss, Q_network.trainable_variables)
 
         ######### Your code ends here ###########
 
@@ -129,6 +139,12 @@ def main():
     # it needs to take in 2 state + 1 action input (3 inputs)
     # it needs to output a single value (batch x 1 output) - the Q-value
     # it should be 3 layers deep with
+
+    Q_network = tfk.Sequential([
+        tfk.layers.Dense(64, "sigmoid"),
+        tfk.layers.Dense(64, "sigmoid"),
+        tfk.layers.Dense(1),
+    ])
 
     ######### Your code ends here ###########
 
