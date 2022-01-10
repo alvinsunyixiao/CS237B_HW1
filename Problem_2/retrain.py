@@ -78,10 +78,10 @@ def retrain(image_dir):
 
     bottleneck_x, bottleneck_y = next(iter(bottleneck_train_ds))
     retrain_input = tfk.layers.Input(bottleneck_x.shape)
-    retrain_layer = tfk.layers.Dense(bottleneck_y.shape[-1])
+    retrain_layer = tfk.layers.Dense(bottleneck_y.shape[-1], name="classifier")
     retrain_activation = tfk.layers.Softmax()
     retrain_output = retrain_activation(retrain_layer(retrain_input))
-    retrain_model = tfk.Model(inputs=retrain_input, outputs=retrain_output, name="classifier")
+    retrain_model = tfk.Model(inputs=retrain_input, outputs=retrain_output)
 
     loss = tfk.losses.CategoricalCrossentropy()
     metric = tfk.metrics.CategoricalAccuracy()
@@ -111,7 +111,7 @@ def retrain(image_dir):
     # Use tensorflow keras Sequential to stack the base_model and the new layers
     # Fill in the parts indicated by #FILL#. No additional lines are required.
 
-    model = tfk.Sequential([base_model, retrain_model])
+    model = tfk.Sequential([base_model, retrain_layer, retrain_activation])
 
     ######### Your code ends here #########
 
