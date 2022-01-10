@@ -1,5 +1,6 @@
 import argparse
 import numpy as np, tensorflow as tf
+import tensorflow.keras as tfk
 from utils import IMG_SIZE, image_generator, LABELS, maybe_makedirs
 
 BATCH_SIZE = 100
@@ -29,6 +30,10 @@ def get_bottleneck_dataset(model, img_dir, img_size):
         # bottleneck_x_l -> list of tensors with dimension [1, bottleneck_size]
         # bottleneck_y_l -> list of tensors with dimension [1, num_labels]
         # Fill in the parts indicated by #FILL#. No additional lines are required.
+
+        x_i, y_i = next(train_img_gen)
+        bottleneck_x_l.append(model(x_i))
+        bottleneck_y_l.append(y_i)
 
         ######### Your code ends here #########
 
@@ -71,7 +76,15 @@ def retrain(image_dir):
     # 3. Define a loss and a evaluation metric
     # Fill in the parts indicated by #FILL#. No additional lines are required.
 
+    bottleneck_x, bottleneck_y = next(iter(bottleneck_train_ds))
+    retrain_input = tfk.layers.Input(bottleneck_x.shape)
+    retrain_layer = tfk.layers.Dense(bottleneck_y.shape[-1])
+    retrain_activation = tfk.layers.Softmax()
+    retrain_output = retrain_activation(retrain_layer(retrain_input))
+    retrain_model = tfk.Model(inputs=retrain_input, outputs=retrain_output, name="classifier")
 
+    loss = tfk.losses.CategoricalCrossentropy()
+    metric = tfk.metrics.CategoricalAccuracy()
 
     ######### Your code ends here #########
 
@@ -97,6 +110,9 @@ def retrain(image_dir):
     # We now want to create the full model using the newly trained classifier
     # Use tensorflow keras Sequential to stack the base_model and the new layers
     # Fill in the parts indicated by #FILL#. No additional lines are required.
+
+    model = tfk.Sequential([base_model, retrain_model])
+
     ######### Your code ends here #########
 
     model.compile(loss=loss, metrics=[metric])

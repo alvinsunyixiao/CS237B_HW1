@@ -1,5 +1,6 @@
 import argparse, pdb
 import numpy as np, tensorflow as tf
+import tensorflow.keras as tfk
 from utils import IMG_SIZE, LABELS, image_generator
 
 
@@ -26,6 +27,19 @@ def classify(model, test_dir):
         # break after 1 epoch
                 #pdb.set_trace()
 
+    num_test = test_img_gen.samples
+    y_true = []
+    y_pred = []
+    for i in range(num_test):
+        x, y = next(test_img_gen)
+        y_true.append(y)
+        y_pred.append(model(x))
+
+    pred_acc = tfk.metrics.categorical_accuracy(y_true, y_pred)
+    for i in range(num_test):
+        if not pred_acc[i]:
+            print(test_img_gen.filenames[i], f"predicted: {np.argmax(y_pred[i])}")
+    accuracy = tf.reduce_mean(pred_acc).numpy()
 
     ######### Your code ends here #########
 
