@@ -55,7 +55,7 @@ def Q_learning(Q_network, reward_fn, is_terminal_fn, X, U, Xp, gam):
     # create the Adam optimizer with tensorflow keras
     # experiment with different learning rates [1e-4, 1e-3, 1e-2, 1e-1]
 
-    optimizer = tfk.optimizers.Adam(1e-1)
+    optimizer = tfk.optimizers.Adam(1e-3)
 
     ######### Your code ends here ###########
 
@@ -141,10 +141,11 @@ def main():
     # it should be 3 layers deep with
 
     Q_network = tfk.Sequential([
-        tfk.layers.Dense(64, "sigmoid"),
-        tfk.layers.Dense(64, "sigmoid"),
+        tfk.layers.Dense(64, "tanh"),
+        tfk.layers.Dense(64, "tanh"),
         tfk.layers.Dense(1),
     ])
+    Q_network.build((None, 2 + 1)) # input is (state_x, state_y, u)
 
     ######### Your code ends here ###########
 
