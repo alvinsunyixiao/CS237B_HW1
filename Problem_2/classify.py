@@ -17,6 +17,7 @@ def classify(model, test_dir):
         classes=LABELS,
         batch_size=1,
         shuffle=False,
+        interpolation="bilinear",
     )
 
     ######### Your code starts here #########
