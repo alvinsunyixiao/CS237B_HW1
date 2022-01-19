@@ -1,4 +1,4 @@
-import argparse
+import argparse, pdb
 import matplotlib.pyplot as plt, numpy as np, tensorflow as tf
 
 from utils import (
@@ -51,6 +51,7 @@ def compute_brute_force_classification(model, image_path, nH=8, nW=8):
         raw_image[tf.newaxis], boxes, box_indices, (IMG_SIZE, IMG_SIZE))
     window_predictions = model(window_images)
     window_predictions = tf.reshape(window_predictions, (nH, nW, -1))
+
 
     ######### Your code ends here #########
 
@@ -173,6 +174,11 @@ if __name__ == "__main__":
     maybe_makedirs("../plots")
 
     model = tf.keras.models.load_model("./trained_models/trained.h5")
+    model.__call__ = tf.function(model.__call__)
+
+    writer = tf.summary.create_file_writer("retrain_logs")
+    tf.summary.trace_on()
+
     if FLAGS.scheme == "brute":
         plot_classification(
             FLAGS.image,
@@ -187,3 +193,6 @@ if __name__ == "__main__":
         compute_and_plot_saliency(model, FLAGS.image)
     else:
         print("Unrecognized scheme:", FLAGS.scheme)
+
+    with writer.as_default():
+        tf.summary.trace_export("detect_%s" % FLAGS.scheme, step=0)
