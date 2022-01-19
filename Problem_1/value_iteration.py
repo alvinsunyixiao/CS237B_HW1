@@ -81,20 +81,42 @@ def simulate_trajectory(problem, V, R, gam, goal_idx):
 
     plt.plot(Xs, Ys, "r")
 
+# shared function to compare with q learning
+def run_value_iter(problem):
+    n = problem["n"]
+    sdim = n * n
+    goal_idx = problem["pos2idx"][19, 9]
+
+    # create the terminal mask vector
+    terminal_mask = np.zeros([sdim])
+    terminal_mask[goal_idx] = 1.0
+    terminal_mask = tf.convert_to_tensor(terminal_mask, dtype=tf.float32)
+
+    # generate the reward vector
+    reward = np.zeros([sdim, 4])
+    reward[goal_idx, :] = 1.0
+    reward = tf.convert_to_tensor(reward, dtype=tf.float32)
+
+    gam = 0.95
+    V_opt = value_iteration(problem, reward, terminal_mask, gam)
+
+    return V_opt
+
+
 # value iteration ##############################################################
 def main():
     # generate the problem
     problem = generate_problem()
     n = problem["n"]
     sdim = n * n
+    goal_idx = problem["pos2idx"][19, 9]
 
     # create the terminal mask vector
     terminal_mask = np.zeros([sdim])
-    terminal_mask[problem["pos2idx"][19, 9]] = 1.0
+    terminal_mask[goal_idx] = 1.0
     terminal_mask = tf.convert_to_tensor(terminal_mask, dtype=tf.float32)
 
     # generate the reward vector
-    goal_idx = problem["pos2idx"][19, 9]
     reward = np.zeros([sdim, 4])
     reward[goal_idx, :] = 1.0
     reward = tf.convert_to_tensor(reward, dtype=tf.float32)

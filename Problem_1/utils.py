@@ -51,6 +51,36 @@ def visualize_value_function(V):
     plt.quiver(X, Y, u, v, pivot="middle")
 
 
+def optimal_action_from_value(V):
+    """
+    Obtain optimal action for each state given some value table
+
+    Args:
+        V: (np.array) the value function reshaped into a 2D array.
+    """
+    V = np.array(V)
+    assert V.ndim == 2
+    m, n = V.shape
+    pos2idx = np.arange(m * n).reshape((m, n))
+    X, Y = np.meshgrid(np.arange(m), np.arange(n))
+    pts = np.stack([X.reshape(-1), Y.reshape(-1)], -1)
+    u, v = [], []
+    for pt in pts:
+        pt_min, pt_max = [0, 0], [m - 1, n - 1]
+        pt_right = np.clip(np.array(pt) + np.array([1, 0]), pt_min, pt_max)
+        pt_up = np.clip(np.array(pt) + np.array([0, 1]), pt_min, pt_max)
+        pt_left = np.clip(np.array(pt) + np.array([-1, 0]), pt_min, pt_max)
+        pt_down = np.clip(np.array(pt) + np.array([0, -1]), pt_min, pt_max)
+        next_pts = [pt_right, pt_up, pt_left, pt_down]
+        Vs = [V[next_pt[0], next_pt[1]] for next_pt in next_pts]
+        idx = np.argmax(Vs)
+        u.append(next_pts[idx][0] - pt[0])
+        v.append(next_pts[idx][1] - pt[1])
+    u, v = np.reshape(u, (m, n)), np.reshape(v, (m, n))
+
+    return np.stack([u, v], axis=-1)
+
+
 def make_transition_matrices(m, n, x_eye, sig):
     """
     Compute the transisiton matrices T, which maps a state probability vector to

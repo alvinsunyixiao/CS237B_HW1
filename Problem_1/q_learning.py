@@ -5,7 +5,9 @@ import tensorflow as tf, numpy as np, matplotlib.pyplot as plt
 import tensorflow.keras as tfk
 from tqdm import tqdm
 
-from utils import map_chunked, generate_problem, visualize_value_function
+from utils import map_chunked, generate_problem, visualize_value_function, \
+                  optimal_action_from_value
+from value_iteration import run_value_iter
 
 def Q_learning(Q_network, reward_fn, is_terminal_fn, X, U, Xp, gam):
     assert X.ndim == 2 and U.ndim == 2 and Xp.ndim == 2
@@ -178,7 +180,19 @@ def main():
     visualize_value_function(V.numpy().reshape((n, n)))
     plt.colorbar()
     plt.show()
+
+    # compare optimal action with value iteration
     ########################################################
+    # q learning
+    actions_ql = optimal_action_from_value(V.numpy().reshape((n, n)))
+    # value iteration
+    V_vi = run_value_iter(problem)
+    actions_vi = optimal_action_from_value(V_vi.numpy().reshape((n, n)))
+
+    action_same = np.all(actions_ql == actions_vi, axis=-1)
+    plt.imshow(action_same, origin="lower")
+    plt.colorbar()
+    plt.show()
 
 
 if __name__ == "__main__":
